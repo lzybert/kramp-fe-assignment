@@ -1,20 +1,16 @@
 import { GetServerSideProps } from 'next';
 import ProductCard from '../components/ProductCard';
 import styles from './index.module.css';
+import { Product } from '../types';
+import { fetchGraphQL } from '../utils/fetchGraphQL';
+import Link from 'next/link';
 
 export const getServerSideProps: GetServerSideProps = async () => {
   const FEATURED_IDS = ['1', '4', '11', '17'];
-  const featured = [];
-
-  for (const id of FEATURED_IDS) {
-    try {
-      const res = await fetch('http://localhost:4000/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: `
-            query GetProduct($id: ID!) {
-              product(id: $id) {
+  let featured: Product[] = [];
+  const gqlQuery = `
+            query GetProduct($ids: [ID!]!) {
+              products(ids: $ids) {
                 id
                 name
                 price
@@ -25,15 +21,15 @@ export const getServerSideProps: GetServerSideProps = async () => {
                 createdAt
               }
             }
-          `,
-          variables: { id },
-        }),
-      });
-      const data = await res.json();
-      if (data.data?.product) {
-        featured.push(data.data.product);
-      }
-    } catch (e) {}
+        `;
+  try {
+    const data = await fetchGraphQL<{ products: Product[] }>(gqlQuery, { ids: FEATURED_IDS }, { next: { revalidate: 300 } });
+    console.log(data);
+    if (data.products) {
+      featured = data.products;
+    }
+  } catch (e) {
+    console.error(e);
   }
 
   return {
@@ -45,7 +41,7 @@ export const getServerSideProps: GetServerSideProps = async () => {
 };
 
 interface HomePageProps {
-  featured: any[];
+  featured: Product[];
   timestamp: number;
 }
 
@@ -76,7 +72,7 @@ export default function HomePage({ featured, timestamp }: HomePageProps) {
         </div>
         <div className={styles.grid}>
           {featured.map((product, index) => (
-            <ProductCard key={index} product={product} />
+            <ProductCard key={product.id} product={product} />
           ))}
         </div>
       </section>
@@ -85,9 +81,9 @@ export default function HomePage({ featured, timestamp }: HomePageProps) {
         <h2>Shop by category</h2>
         <div className={styles.categoryGrid}>
           {['Tools', 'Fasteners', 'Safety Equipment', 'Power Tools'].map((cat, index) => (
-            <a key={index} href={`/search?q=${cat}`} className={styles.categoryCard}>
+            <Link key={index} href={`/search#${cat}`} className={styles.categoryCard}>
               {cat}
-            </a>
+            </Link>
           ))}
         </div>
       </section>

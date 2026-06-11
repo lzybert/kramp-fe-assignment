@@ -2,12 +2,14 @@ const GRAPHQL_URL = process.env.NEXT_PUBLIC_GRAPHQL_URL || 'http://localhost:400
 
 export async function fetchGraphQL<T = unknown>(
   query: string,
-  variables?: Record<string, unknown>
+  variables?: Record<string, unknown>,
+  options?: Record<string, unknown>
 ): Promise<T> {
   const response = await fetch(GRAPHQL_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ query, variables }),
+    ...options,
   });
 
   if (!response.ok) {

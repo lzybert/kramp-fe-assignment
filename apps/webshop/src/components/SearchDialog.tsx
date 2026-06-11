@@ -1,7 +1,8 @@
 import styles from './SearchDialog.module.css';
+import { Product } from '../types';
 
 interface SearchDialogProps {
-  results: any[];
+  results: Product[];
   onSelect: (id: string) => void;
 }
 
@@ -12,9 +13,10 @@ export function SearchDialog({ results, onSelect }: SearchDialogProps) {
     <div className={styles.dialog}>
       {results.map((result, index) => (
         <div
-          key={index}
+          key={result.id}
           className={styles.item}
           onClick={() => onSelect(result.id)}
+          role="button"
         >
           <span className={styles.itemName}>{result.name}</span>
           <span className={styles.itemPrice}>€{result.price.toFixed(2)}</span>

@@ -1,8 +1,14 @@
 import React from 'react';
 import { useRouter } from 'next/router';
 import styles from './ProductCard.module.css';
+import { Product } from '../types';
 
-const ProductCard: React.FC<any> = ({ product, onAddToCart }) => {
+type ProductCardType = {
+  product: Product;
+  onAddToCart?: () => void;
+}
+
+const ProductCard: React.FC<ProductCardType> = ({ product, onAddToCart = () => {}  }) => {
   const router = useRouter();
 
   return (
@@ -20,19 +26,15 @@ const ProductCard: React.FC<any> = ({ product, onAddToCart }) => {
       <div className={styles.body}>
         <h3 className={styles.name}>{product.name}</h3>
         <p className={styles.price} data-testid="product-price">€{product.price.toFixed(2)}</p>
-        <div
+        <button
           onClick={() => router.push(`/product/${product.id}`)}
           className={styles.button}
         >
           View product
-        </div>
+        </button>
       </div>
     </div>
   );
-};
-
-(ProductCard as any).defaultProps = {
-  onAddToCart: () => {},
 };
 
 export default ProductCard;

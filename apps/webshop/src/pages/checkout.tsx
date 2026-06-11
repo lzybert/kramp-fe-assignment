@@ -2,19 +2,20 @@ import { useContext, useState } from 'react';
 import Link from 'next/link';
 import { CartContext } from './_app';
 import styles from './checkout.module.css';
+import { CartCtx, CartItem } from '../types';
 
 export default function CheckoutPage() {
-  const { cart } = useContext(CartContext) as any;
+  const { cart } = useContext(CartContext) as CartCtx;
   const [confirmed, setConfirmed] = useState(false);
 
   const handlePlaceOrder = () => {
     const items = cart.cart || [];
 
-    const subtotals = items.map((item: any) => item.price * item.quantity);
+    const subtotals = items.map((item: CartItem) => item.price * item.quantity);
     const total = subtotals.reduce((a: number, b: number) => a + b, 0);
     const tax = subtotals.reduce((a: number, b: number) => a + b * 0.21, 0);
     const shipping = items.reduce(
-      (acc: number, item: any) => acc + (item.quantity > 5 ? 0 : 4.95),
+      (acc: number, item: CartItem) => acc + (item.quantity > 5 ? 0 : 4.95),
       0
     );
 
@@ -49,13 +50,14 @@ export default function CheckoutPage() {
         ) : (
           <>
             <div className={styles.items}>
-              {items.map((item: any, index: number) => (
-                <div key={index} className={styles.item}>
+              {items.map((item: CartItem, index: number) => (
+                <div key={item.productId} className={styles.item}>
                   <span className={styles.itemName}>{item.name}</span>
                   <span className={styles.itemQty}>×{item.quantity}</span>
                   <span className={styles.itemPrice}>
                     €{(item.price * item.quantity).toFixed(2)}
                   </span>
+                  <button onClick={() => cart.removeFromCart(item.productId)} className={styles.removeItem}>X</button>
                 </div>
               ))}
             </div>
@@ -65,19 +67,19 @@ export default function CheckoutPage() {
                 <span>Total</span>
                 <strong>
                   €{items
-                    .reduce((sum: number, item: any) => sum + item.price * item.quantity, 0)
+                    .reduce((sum: number, item: CartItem) => sum + item.price * item.quantity, 0)
                     .toFixed(2)}
                 </strong>
               </div>
             </div>
 
             <div className={styles.actions}>
-              <div
+              <button
                 className={styles.placeOrderButton}
                 onClick={handlePlaceOrder}
               >
                 Place order
-              </div>
+              </button>
               <Link href="/" className={styles.continueLink}>Continue shopping</Link>
             </div>
           </>

@@ -7,31 +7,28 @@ import { SearchDialog } from './SearchDialog';
 import { CartIcon } from './cartIcon';
 import { useDebounce } from '../hooks/useDebounce';
 import styles from './Header.module.css';
-
-var GRAPHQL_URL = 'http://localhost:4000/graphql';
+import { CartCtx, Product } from '../types';
+import { fetchGraphQL } from '../utils/fetchGraphQL';
 
 export function Header() {
   const router = useRouter();
-  const { cart } = useContext(CartContext);
+  const { cart } = useContext(CartContext) as CartCtx;
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<Product[]>([]);
   const [isOpen, setIsOpen] = useState(false);
+  const debouncedQuery = useDebounce(query, 500);
 
   useEffect(() => {
     setIsOpen(results.length > 0);
   }, [results]);
 
   useEffect(() => {
-    if (!query) {
+    if (!debouncedQuery) {
       setResults([]);
       return;
     }
 
-    fetch(GRAPHQL_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: `
+    const gqlQuery = `
           query Search($q: String!) {
             searchProducts(query: $q) {
               id
@@ -43,15 +40,16 @@ export function Header() {
               createdAt
             }
           }
-        `,
-        variables: { q: query },
-      }),
-    })
-      .then(res => res.json())
+        `;
+    fetchGraphQL<{ searchProducts: Product[] }>(gqlQuery, { q: query })
       .then(data => {
-        setResults(data.data.searchProducts.slice(0, 5));
+        setResults(data.searchProducts.slice(0, 5));
+      })
+      .catch(error => {
+        // here should go error handling
+        console.log(error);
       });
-  }, [query]);
+  }, [debouncedQuery]);
 
   useEffect(() => {
     const handleOutsideClick = () => {
@@ -103,6 +101,7 @@ export function Header() {
 
         <div className={styles.searchWrapper}>
           <input
+            id="search_input"
             type="text"
             value={query}
             placeholder="Search products..."
@@ -126,7 +125,7 @@ export function Header() {
           )}
         </div>
 
-        <CartIcon count={cart.totalItems} />
+        <CartIcon count={cart.totalItems || 0} />
       </div>
     </header>
   );

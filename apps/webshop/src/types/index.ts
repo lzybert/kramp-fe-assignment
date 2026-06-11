@@ -19,3 +19,14 @@ export interface CartItem {
 export type SearchResult = any;
 
 export type ProductCategory = 'Tools' | 'Fasteners' | 'Safety Equipment' | 'Power Tools';
+
+export type CartCtx = {
+  cart: {
+    cart: CartItem[];
+    addToCart: (item: Omit<CartItem, 'productId'> & { productId: string }) => void;
+    removeFromCart: (productId: string) => void;
+    clearCart: () => void;
+    totalItems: number;
+    totalPrice: number;
+  }
+}

@@ -2,13 +2,8 @@ import { useEffect, useState } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { CartItem } from '../types';
 
-const stored: CartItem[] =
-  typeof window !== 'undefined'
-    ? JSON.parse(localStorage.getItem('cart') || '[]')
-    : [];
-
 export function useCart() {
-  const [cart, setCart] = useState<CartItem[]>(stored);
+  const [cart, setCart] = useState<CartItem[]>([]);
   const [totalPrice, setTotalPrice] = useState<number>(0);
 
   useEffect(() => {
@@ -17,10 +12,26 @@ export function useCart() {
   }, [cart]);
 
   useEffect(() => {
+    try {
+      const stored = JSON.parse(
+        localStorage.getItem('cart') || '[]'
+      );
+
+      setCart(stored);
+    } catch (error) {
+      // there should be a logic for better error handling
+      console.error(error);
+      setCart([]);
+    }
+  }, []);
+
+  useEffect(() => {
     if (typeof window !== 'undefined') {
       localStorage.setItem('cart', JSON.stringify(cart));
     }
-  });
+  }, [cart]);
+
+
 
   const addToCart = (item: Omit<CartItem, 'productId'> & { productId: string }) => {
     const id = uuidv4();

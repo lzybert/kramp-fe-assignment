@@ -2,21 +2,19 @@ import { useRouter } from 'next/router';
 import { useContext, useEffect, useState } from 'react';
 import { CartContext } from '../_app';
 import styles from './[id].module.css';
+import { CartCtx, Product } from '../../types';
+import { fetchGraphQL } from '../../utils/fetchGraphQL';
 
 var GRAPHQL_URL = 'http://localhost:4000/graphql';
 
 export default function ProductPage() {
   const router = useRouter();
-  const { cart } = useContext(CartContext) as any;
-  const [product, setProduct] = useState<any>(null);
+  const { cart } = useContext(CartContext) as CartCtx;
+  const [product, setProduct] = useState<Product | null>(null);
   useEffect(() => {
     if (!router.query.id) return;
 
-    fetch(GRAPHQL_URL, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        query: `
+    const gqlQuery = `
           query GetProduct($id: ID!) {
             product(id: $id) {
               id
@@ -29,16 +27,17 @@ export default function ProductPage() {
               createdAt
             }
           }
-        `,
-        variables: { id: router.query.id },
-      }),
-    })
-      .then(res => res.json())
+        `;
+    fetchGraphQL<{ product: Product }>(gqlQuery, { id: router.query.id })
       .then(data => {
         console.log('product loaded:', data);
-        setProduct(data.data.product);
+        setProduct(data.product);
+      })
+      .catch(error => {
+        // here should go error handling
+        console.log(error);
       });
-  }, [cart]);
+  }, [router.query.id]);
 
   const handleAddToCart = () => {
     if (!product) return;

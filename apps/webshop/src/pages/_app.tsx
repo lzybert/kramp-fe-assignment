@@ -4,9 +4,10 @@ import Head from 'next/head';
 import { createContext } from 'react';
 import { useCart } from '../hooks/useCart';
 import { Header } from '../components/Header';
+import { CartCtx } from '../types';
 import './styles.css';
 
-export const CartContext = createContext<any>(null);
+export const CartContext = createContext<CartCtx | null>(null);
 
 function CustomApp({ Component, pageProps }: AppProps) {
   const cart = useCart();
